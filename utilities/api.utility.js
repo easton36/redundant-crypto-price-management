@@ -2,7 +2,7 @@ const axios = require('axios');
 
 const { COIN_MAP } = require('../constants');
 
-const formatAxiosError = (err) => err.response?.data?.message || err.response?.data || err.message || err;
+const formatAxiosError = (err) => err.response?.data?.message || err.response?.data?.error || err.response?.data || err.message || err;
 
 // Fetch specific price from CoinAPI.io (they dont support multiple cryptos in one request)
 const fetchCoinApiPrice = async (coin, apiKey) => {

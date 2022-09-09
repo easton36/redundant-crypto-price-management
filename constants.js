@@ -10,9 +10,13 @@ const COIN_MAP = { // Map of coin symbols to their full name
 	DOT: 'polkadot',
 	XLM: 'stellar',
 	USDC: 'usd-coin',
-	NEO: 'neo'
+	NEO: 'neo',
+	BNB: 'binancecoin'
 };
 
+const SERVICES = ['coinmarketcap', 'coinapi', 'coingecko'];
+
 module.exports = {
-	COIN_MAP
+	COIN_MAP,
+	SERVICES
 };

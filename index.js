@@ -1,6 +1,11 @@
-const { COIN_MAP } = require('./constants');
+const assert = require('assert');
+const path = require('path');
+const events = require('events');
 
-const SERVICES = ['coinmarketcap', 'coinapi', 'coingecko'];
+const { COIN_MAP, SERVICES } = require('./constants');
+const { fetchAllServices } = require('./helpers/prices.helper');
+const { getPricesBasedOnDeviations, getCoinLast24HourMean } = require('./utilities/stats.utility');
+const { addStoreLog } = require('./utilities/store.utility');
 
 const validatePassedCoins = (coins) => {
 	const validCoins = [];
@@ -27,31 +32,133 @@ const validatePassedServices = (services) => {
 		}
 		validServices[service.toLowerCase()] = apiKey;
 	}
+
+	return validServices;
+};
+
+const validateMaximumDeviations = (maximumDeviation, coins) => {
+	assert(coins.every(coin => maximumDeviation[coin] && typeof maximumDeviation[coin] === 'number'), 'Maximum deviation object contains invalid value. Make sure every coin has an assigned maximum deviation.');
+
+	const validDeviations = {};
+
+	for(const [coin, deviation] of Object.entries(maximumDeviation)){
+		validDeviations[coin.toUpperCase()] = Number(deviation);
+	}
+
+	return validDeviations;
 };
 
 module.exports = ({
 	coins = [],
 	services = {},
 	priceUpdateInterval = 60 * 60 * 1000, // 1 hour
-	callback = () => {}
+	maximumServiceDeviation = { // Maximum deviation between services from the mean service price
+		BTC: 30,
+		ETH: 5,
+		LTC: 4,
+		XRP: 0.5,
+		DOGE: 0.005,
+		BCH: 6,
+		USDT: 0.0005,
+		USDC: 0.0005,
+		ADA: 0.009,
+		XLM: 0.0005,
+		DOT: 0.5,
+		NEO: 0.5,
+		BNB: 5
+	},
+	maximumTimeDeviation = { // Maximum deviation between the newest price and the mean of the previous 24 hours of prices
+
+	},
+	filePath = path.join(__dirname, './data/prices.json') // File path to store prices in.
 }) => {
 	coins = validatePassedCoins(coins);
 	services = validatePassedServices(services);
 
-	if(!coins || coins.length < 1){
-		throw new Error('No coins passed');
+	assert(coins && coins.length > 0, '[coins] No coins passed');
+	assert(services && Object.keys(services).length > 0, '[services] No services passed');
+	assert(typeof maximumServiceDeviation === 'number' || typeof maximumServiceDeviation === 'object', '[maximumServiceDeviation] Maximum deviation must be a number or an object');
+	assert(typeof maximumTimeDeviation === 'number' || typeof maximumTimeDeviation === 'object', '[maximumTimeDeviation] Maximum deviation must be a number or an object');
+
+	if(typeof maximumServiceDeviation === 'object'){
+		maximumServiceDeviation = validateMaximumDeviations(maximumServiceDeviation, coins);
 	}
-	if(!services || Object.keys(services).length < 1){
-		throw new Error('No services passed');
-	}
-	if(services.length < 2){
-		console.warn('Only 1 service passed, this may result in less-redundant prices');
-	}
-	if(priceUpdateInterval < 1000){
-		console.warn('Price update interval is very low! This may cause issues with some services.');
+	if(typeof maximumTimeDeviation === 'object'){
+		maximumTimeDeviation = validateMaximumDeviations(maximumTimeDeviation, coins);
 	}
 
-	const updatePrices = () => {
+	if(services.length < 2) console.warn('[services] Only 1 service passed, this may result in less-redundant prices');
+	if(priceUpdateInterval < 1000) console.warn('[priceUpdateInterval] Price update interval is very low! This may cause issues with some services.');
+	if(typeof maximumServiceDeviation === 'number') console.warn('[maximumServiceDeviation] The prices of different coins fluctuate differently with different deviations. It is recommended to pass an object with coin-specific deviations.');
+	if(typeof maximumTimeDeviation === 'number') console.warn('[maximumTimeDeviation] The prices of different coins fluctuate differently with different deviations. It is recommended to pass an object with coin-specific deviations.');
+
+	const eventEmitter = new events.EventEmitter();
+
+	const currentPrices = {}; // current prices stored for easy fetching
+
+	const updatePrices = async () => {
+		try{
+			const newPrices = await fetchAllServices(services, coins);
+			if(!newPrices || Object.keys(newPrices).length < 1){
+				console.warn('New prices failed to be fetched');
+
+				return eventEmitter.emit('update_error', 'New prices failed to be fetched');
+			}
+
+			const overallPrices = getPricesBasedOnDeviations(newPrices, maximumServiceDeviation);
+			if(!overallPrices || Object.keys(overallPrices).length < 1){
+				console.warn('No prices could be calculated from deviations');
+
+				return eventEmitter.emit('update_error', 'No prices could be calculated from deviations');
+			}
+
+			// data that will be inserted into store
+			const newPriceLog = {
+				timestamp: new Date().toJSON(),
+				prices: {
+					...currentPrices
+				}
+			};
+
+			for(const [coin, price] of Object.entries(overallPrices)){
+				const last24HourMean = getCoinLast24HourMean(coin, filePath);
+
+				const deviation = (typeof maximumTimeDeviation === 'number') ? maximumTimeDeviation : maximumTimeDeviation[coin];
+
+				const averageDeviation = Math.abs(price - last24HourMean);
+				if(averageDeviation > deviation){
+					console.warn(`Price deviation of ${coin} is too high. Price: ${price}, last 24 hour mean: ${last24HourMean}, deviation: ${averageDeviation}, maximum deviation: ${deviation}. Coin price will not be logged.`);
+					eventEmitter.emit('deviation_error', {
+						coin,
+						price,
+						last24HourMean,
+						deviation: averageDeviation,
+						maximumDeviation: deviation
+					});
+					continue;
+				}
+				currentPrices[coin] = price;
+				newPriceLog.prices[coin] = price;
+
+				eventEmitter.emit('coin_price_update', {
+					coin,
+					price,
+					deviation: averageDeviation,
+					maximumDeviation: deviation
+				});
+
+				continue;
+			}
+
+			// add new price log to store
+			await addStoreLog(filePath, newPriceLog);
+
+			return eventEmitter.emit('price_update', newPriceLog);
+		} catch(err){
+			console.warn('Error fetching prices:', err);
+
+			return eventEmitter.emit('update_error', err);
+		}
 	};
 
 	let interval = setInterval(updatePrices, priceUpdateInterval);
@@ -59,11 +166,13 @@ module.exports = ({
 	// Get price of single stored currency
 	const getPrice = (coin) => {
 		coin = coin.toUpperCase();
+
+		return currentPrices[coin];
 	};
 
 	// Get prices of all stored currencies
 	const getAllPrices = () => {
-
+		return currentPrices;
 	};
 
 	// restart the interval
@@ -77,7 +186,11 @@ module.exports = ({
 		clearInterval(interval);
 	};
 
+	// fetch all prices on startup
+	updatePrices();
+
 	return {
+		events: eventEmitter,
 		getPrice,
 		getAllPrices,
 		restart,

@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/easton36/redundant-crypto-price-management#readme",
   "devDependencies": {
+    "dotenv": "^16.0.2",
     "eslint": "^8.23.0",
     "eslint-config-standard": "^17.0.0",
     "eslint-plugin-import": "^2.26.0",
@@ -27,7 +28,9 @@
     "eslint-plugin-promise": "^6.0.1"
   },
   "dependencies": {
+    "assert": "^2.0.0",
     "axios": "^0.27.2",
+    "events": "^3.3.0",
     "fs": "^0.0.1-security",
     "path": "^0.12.7"
   }
