@@ -15,3 +15,9 @@ Then, mean of the last 24 hours of prices will be taken (this does not include t
 
 ## Price logging
 The default method for logging prices will be JSON files. I will add support for other cold databases like MongoDB and PostgresSQL (or another SQL flavor)
+
+## Current Crypto Price APIs
+Currently supporting:
+ - [CoinMarketCap](https://coinmarketcap.com/)
+ - [CoinAPI](https://coinapi.io)
+ - [CoinGecko](coingecko.com)
