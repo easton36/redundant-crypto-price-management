@@ -1,6 +1,6 @@
 {
   "name": "redundant-crypto-price-management",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Library for tracking crypto prices from a number of sources with redundancy to prevent price manipulation errors",
   "main": "index.js",
   "repository": {
