@@ -68,9 +68,22 @@ module.exports = ({
 		BNB: 5
 	},
 	maximumTimeDeviation = { // Maximum deviation between the newest price and the mean of the previous 24 hours of prices
-
+		BTC: 250,
+		ETH: 100,
+		LTC: 50,
+		XRP: 5,
+		DOGE: 5,
+		BCH: 50,
+		USDT: 0.015,
+		USDC: 0.015,
+		ADA: 5,
+		XLM: 5,
+		DOT: 5,
+		NEO: 5,
+		BNB: 75
 	},
-	filePath = path.join(__dirname, './data/prices.json') // File path to store prices in.
+	filePath = path.join(__dirname, './data/prices.json'), // File path to store prices in.
+	logging = true // Whether to log to console internally or not.
 }) => {
 	coins = validatePassedCoins(coins);
 	services = validatePassedServices(services);
@@ -100,14 +113,14 @@ module.exports = ({
 		try{
 			const newPrices = await fetchAllServices(services, coins);
 			if(!newPrices || Object.keys(newPrices).length < 1){
-				console.warn('New prices failed to be fetched');
+				if(logging) console.warn('New prices failed to be fetched');
 
 				return eventEmitter.emit('update_error', 'New prices failed to be fetched');
 			}
 
 			const overallPrices = getPricesBasedOnDeviations(newPrices, maximumServiceDeviation);
 			if(!overallPrices || Object.keys(overallPrices).length < 1){
-				console.warn('No prices could be calculated from deviations');
+				if(logging) console.warn('No prices could be calculated from deviations');
 
 				return eventEmitter.emit('update_error', 'No prices could be calculated from deviations');
 			}
@@ -115,6 +128,7 @@ module.exports = ({
 			// data that will be inserted into store
 			const newPriceLog = {
 				timestamp: new Date().toJSON(),
+				nextUpdate: new Date(Date.now() + priceUpdateInterval).toJSON(),
 				prices: {
 					...currentPrices
 				}
@@ -127,7 +141,7 @@ module.exports = ({
 
 				const averageDeviation = Math.abs(price - last24HourMean);
 				if(averageDeviation > deviation){
-					console.warn(`Price deviation of ${coin} is too high. Price: ${price}, last 24 hour mean: ${last24HourMean}, deviation: ${averageDeviation}, maximum deviation: ${deviation}. Coin price will not be logged.`);
+					if(logging) console.warn(`Price deviation of ${coin} is too high. Price: ${price}, last 24 hour mean: ${last24HourMean}, deviation: ${averageDeviation}, maximum deviation: ${deviation}. Coin price will not be logged.`);
 					eventEmitter.emit('deviation_error', {
 						coin,
 						price,
@@ -155,7 +169,7 @@ module.exports = ({
 
 			return eventEmitter.emit('price_update', newPriceLog);
 		} catch(err){
-			console.warn('Error fetching prices:', err);
+			if(logging) console.warn('Error fetching prices:', err);
 
 			return eventEmitter.emit('update_error', err);
 		}

@@ -26,7 +26,22 @@ const store = CoinStore({
 		NEO: 0.5,
 		BNB: 5
 	},
-	maximumTimeDeviation: 100 // Maximum deviation between the newest price and the mean of the previous 24 hours of prices
+	maximumTimeDeviation: { // Maximum deviation between the newest price and the mean of the previous 24 hours of prices
+		BTC: 250,
+		ETH: 100,
+		LTC: 50,
+		XRP: 5,
+		DOGE: 5,
+		BCH: 50,
+		USDT: 0.015,
+		USDC: 0.015,
+		ADA: 5,
+		XLM: 5,
+		DOT: 5,
+		NEO: 5,
+		BNB: 75
+	},
+	logging: true // Whether to log to console internally or not.
 });
 
 store.events.on('price_update', data => {
