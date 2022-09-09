@@ -13,3 +13,6 @@ I understand that crypto prices fluctuate a lot, so I will only be comparing pri
 - Mean last 24 hours of valid prices
 - Calculate percentage of deviation of the newest price compared to the last 24 hour mean
 - Invalidate price if devation is greater than X
+
+## Price logging
+The default method for logging prices will be JSON files. I will add support for other cold databases like MongoDB and PostgresSQL (or another SQL flavor)
