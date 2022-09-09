@@ -44,6 +44,9 @@ module.exports = ({
 	if(!services || Object.keys(services).length < 1){
 		throw new Error('No services passed');
 	}
+	if(services.length < 2){
+		console.warn('Only 1 service passed, this may result in less-redundant prices');
+	}
 	if(priceUpdateInterval < 1000){
 		console.warn('Price update interval is very low! This may cause issues with some services.');
 	}
@@ -57,6 +60,7 @@ module.exports = ({
 	const getPrice = (coin) => {
 		coin = coin.toUpperCase();
 	};
+
 	// Get prices of all stored currencies
 	const getAllPrices = () => {
 

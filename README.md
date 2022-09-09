@@ -21,3 +21,15 @@ Currently supporting:
  - [CoinMarketCap](https://coinmarketcap.com/)
  - [CoinAPI](https://coinapi.io)
  - [CoinGecko](coingecko.com)
+
+## Currently Supported Currencies
+ - Bitcoin (BTC)
+ - Ethereum (ETH)
+ - Dogecoin (DOGE)
+ - Cardano (ADA)
+ - Bitcoin Cash (BCH)
+ - Tether (USDT)
+ - Polkadot (DOT)
+ - Stellar (XLM)
+ - Neo (NEO)
+ - USD Coin (USDC)
