@@ -25,6 +25,7 @@ Currently supporting:
 ## Currently Supported Currencies
  - Bitcoin (BTC)
  - Ethereum (ETH)
+ - Litecoin (LTC)
  - Dogecoin (DOGE)
  - Cardano (ADA)
  - Bitcoin Cash (BCH)
