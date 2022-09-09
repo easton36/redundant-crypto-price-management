@@ -34,3 +34,6 @@ Currently supporting:
  - Stellar (XLM)
  - Neo (NEO)
  - USD Coin (USDC)
+
+## Examples
+Please see the examples folder for examples of how to use this library.
