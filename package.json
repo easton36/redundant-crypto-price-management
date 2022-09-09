@@ -1,0 +1,34 @@
+{
+  "name": "redundant-crypto-price-management",
+  "version": "1.0.0",
+  "description": "Library for tracking crypto prices from a number of sources with redundancy to prevent price manipulation errors",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/easton36/redundant-crypto-price-management.git"
+  },
+  "keywords": [
+    "cryptocurrency",
+    "pricing",
+    "redundancy",
+    "coinmarketcap"
+  ],
+  "author": "Easton (https://easton.gg)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/easton36/redundant-crypto-price-management/issues"
+  },
+  "homepage": "https://github.com/easton36/redundant-crypto-price-management#readme",
+  "devDependencies": {
+    "eslint": "^8.23.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.5",
+    "eslint-plugin-promise": "^6.0.1"
+  },
+  "dependencies": {
+    "axios": "^0.27.2",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
+  }
+}
